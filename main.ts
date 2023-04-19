@@ -1,17 +1,20 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, RequestUrlParam, TFile, WorkspaceLeaf, request } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, RequestUrlParam, TFile, TagCache, WorkspaceLeaf, request } from 'obsidian';
 import { Configuration, OpenAIApi } from 'openai';
 import { DEFAULT_SETTINGS, ZettelGPTSettings, ZettelGPTSettingsTab } from 'src/Setting';
+import MarkdownIt from 'markdown-it';
 
 interface Metadata {
 	[key: string]: string;
 }
 
-export default class MyPlugin extends Plugin {
+export default class ZettelGPT extends Plugin {
   settings: ZettelGPTSettings;
   openai: OpenAIApi;
+  md: MarkdownIt;
 
   async onload() {
     await this.loadSettings();
+    this.md = new MarkdownIt();
 
     // setting
     this.addSettingTab(new ZettelGPTSettingsTab(this.app, this));
@@ -21,28 +24,29 @@ export default class MyPlugin extends Plugin {
     this.openai = new OpenAIApi(configuration);
 
     // Ribbon Button 등록
-    this.addRibbonIcon("info", "Calculate average file length", async () => {
-      //this.
-      const fileLength = await this.parseQuestionFromCurrentFile();
-      new Notice(`Your Question is [${fileLength}]`);
-    });
-
     this.addRibbonIcon("message-circle", "Generate ChatGPT Answer", async () => {
       await this.generateAnswer();
     });
-
-  // 좌측 플러그인 아이콘 관련 코드
-    const ribbonIconEl = this.addRibbonIcon('dice', '[this text is shown when you place your mouse on here]', (evt: MouseEvent) => {
-      // Called when the user clicks the icon.
-      new Notice('[This is a notice! by gshim!]');
-      this.createGshimFile();
+    this.addRibbonIcon("help-circle", "Generate ChatGPT Answer", async () => {
+      new Notice('[This button will generate new question file!]');
     });
-    // Perform additional things with the ribbon
-    ribbonIconEl.addClass('my-plugin-ribbon-class');
+    this.addRibbonIcon("dice", "getLink", async () => {
+      const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
+      if (!(currentFile instanceof TFile))
+        return;
+      console.log('link: ', await this.printFileMetadataCache(currentFile));
+    });
+    this.addRibbonIcon("fish", "getConversationHistory", async () => {
+      const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
+      if (!(currentFile instanceof TFile))
+        return;
+      //const questionContent = await this.app.vault.read(currentFile);
+      console.log('getContent: ', await this.getConversationHistory(currentFile));
+    });
 
-  // 우측 하단의 statusBar 관련 코드
+    // 우측 하단의 statusBar 관련 코드
     const statusBarItemEl = this.addStatusBarItem();
-    statusBarItemEl.setText('[Status Bar Text by gshim@@@@@@@@]');
+    statusBarItemEl.setText('[ZettelGPT in online]');
 
     // 단축키 기반 커맨드 등록
     this.addCommand({
@@ -93,40 +97,6 @@ export default class MyPlugin extends Plugin {
         }
       }
     });
-
-  // ???
-    this.registerEvent(
-      this.app.workspace.on('file-menu', (menu, file, source) => {
-        menu.addItem((item) => {
-        item.setTitle('Create gshim.md file')
-          .setIcon('plus')
-          .onClick(() => this.createGshimFile());
-        });
-      })
-    );
-
-    // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-    // Using this function will automatically remove the event listener when this plugin is disabled.
-    this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-      console.log('click', evt);
-    });
-
-    // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-    this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-  }
-
-  async createGshimFile() {
-    const fileName = 'gshim.md';
-    const existingFile = this.app.vault.getAbstractFileByPath(fileName);
-
-    if (!existingFile) {
-      await this.app.vault.create(fileName, '');
-      console.log('gshim.md file created');
-      new Notice('gshim.md file created');
-    } else {
-      console.log('gshim.md file already exists');
-      new Notice('gshim.md file already exists');
-    }
   }
 
   async generateAnswer() {
@@ -140,9 +110,25 @@ export default class MyPlugin extends Plugin {
     const questionFile = activeView.file;
     // Parse Question
     const questionContent = await this.app.vault.read(questionFile);
+    const conversationHistory = await this.getConversationHistory(questionFile);
+    // append content by querySlector
+    // ==========================
+    //const renderedNote = this.app.workspace.ren
+    //MarkdownRenderer renderer;
+    // ==========================
+
+    // Make answerFile
+    const answerFileName = `${questionFile.basename}-answer`;
+    const answerFile = await vault.create(`${answerFileName}.md`, '');
+
+    // 질문노트에 답변노트링크를 추가하는 작업.
+    //await vault.append(questionFile, ` [[${answerFile.basename}]]`)
+
+
+    // Parse conversation context
+    //this.app.metadataCache.fileToLinktext()
 
     // =================================
-    const answerFileName = `${questionFile.basename}-answer.md`;
 
     // Open templateFile
     const templatePath = 'Template/Answer.md';
@@ -171,18 +157,13 @@ export default class MyPlugin extends Plugin {
     }
 
     // Create the new file with the generated content
-    const fileName = `${answerFileName}.md`;
-    const answerFile = await vault.create(fileName, templateContent);
+    // Write the generated content to answerFile
+    await vault.append(answerFile, templateContent);
 
     // =================================
 
     // Make Answer by chatGPT
-    //const answerContent :string = await this.getChatGPTAnswer(questionContent);
-    const answerContent :string = await this.getChatGPTAnswer2(questionContent, answerFile);
-
-
-    // createNewNoteFromTemplate를 분리하자...
-    //await this.createNewNoteFromTemplate(templatePath, questionFile, answerContent);
+    const answerContent :string = await this.getChatGPTAnswer2(conversationHistory, answerFile);
 
     // Open & display AnswerFile
     const recentLeaf = workspace.getMostRecentLeaf();
@@ -222,29 +203,8 @@ export default class MyPlugin extends Plugin {
     return res.choices[0].message.content;
   }
 
-  async getChatGPTAnswerByStream(question: string) {
-    console.log('getChatGPTAnswerByStream start!');
-    new Notice('getChatGPTAnswerByStream start!');
-
-    const apiKey = this.settings.openAiApiKey;
-    const endpointUrl = 'https://api.openai.com/v1/chat/completions';
-    const prompt = 'what is google?';
-
-    const response = await this.openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {"role": "system", "content": "You are a helpful assistant that translates English to French."},
-        {"role": "user", "content": prompt}
-      ],
-      stream: true,
-    }, { responseType: 'stream' });
-    console.log('getChatGPTAnswerByStream end!');
-    new Notice('getChatGPTAnswerByStream end!');
-
-    return "sample text";
-  }
-
-	async getChatGPTAnswer2(question: string, answerFile: TFile) {
+  // 질문을 넣으면 stream형식으로 answerFile에 append합니다.
+  async getChatGPTAnswer2(messages: any, answerFile: TFile) {
     const apiKey = this.settings.openAiApiKey;
     const endpointUrl = 'https://api.openai.com/v1/chat/completions';
     const fetchOptions = {
@@ -255,26 +215,21 @@ export default class MyPlugin extends Plugin {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        messages: [
-          {"role": "system", "content": "You are a helpful assistant."},
-          {"role": "user", "content": question}
-        ],
+        // messages: [
+        //   {"role": "system", "content": "You are a helpful assistant."},
+        //   {"role": "user", "content": question},
+        // ],
+        messages,
         model: 'gpt-3.5-turbo',
-        temperature: 0,
+        //temperature: 0,
         max_tokens: 2048,
-        presence_penalty: 0.0,
+        //presence_penalty: 0.0,
         stream: true,
         //    stop: ['\n'],
       }),
     };
-
-    /*
-      messages: [
-        {"role": "system", "content": "You are a helpful assistant that speak korean."},
-        {"role": "user", "content": question}
-      ],
-    */
-    let message: any = {
+    console.log('apiKey: ', apiKey);
+    const message = {
       "role": "assistant",
       "content": ""
     };
@@ -285,7 +240,7 @@ export default class MyPlugin extends Plugin {
 
     const d = new TextDecoder('utf8');
     const reader = await r.getReader();
-    let fullText = ''
+    const fullText = ''
     while (true) {
       const { value, done } = await reader.read();
       if (done) {
@@ -298,10 +253,12 @@ export default class MyPlugin extends Plugin {
 
         for (const line of lines) {
           try {
+            console.log('line: ', line);
             const delta: any = JSON.parse(line.slice(6)).choices[0].delta;
             if (delta.hasOwnProperty("role"))
               message["role"] = delta["role"];
             else if (delta.hasOwnProperty("content")) {
+              console.log('content: ', message["content"]);
               message["content"] += delta["content"];
               // 1안 열려있는 파일의 특정 placeholder를 replace한다.
 
@@ -324,7 +281,19 @@ export default class MyPlugin extends Plugin {
     return 'a';
 	}
 
-  // about file....
+  async parseQuestionFromString(questionContent: string): Promise<string> {
+    //const notesRegex = /^##\s*내용:\s*((?:\n|.)*?)^###\s/m;
+    //const notesRegex = /^##\s내용:\n----\s*((?:\n|.)*?)^----\s/m;
+    const notesRegex = /## 내용:\n([\s\S]*)/;
+    const notesMatch = questionContent.match(notesRegex);
+    const notesParagraph = notesMatch ? notesMatch[1] : '';
+
+    console.log('notesParagraph: ', notesParagraph);
+
+    return notesParagraph;
+  }
+
+  // debug function
   async parseQuestionFromCurrentFile(): Promise<string> {
     const { vault } = this.app;
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -336,6 +305,7 @@ export default class MyPlugin extends Plugin {
     const fileContent = await vault.read(questionFile);
 
     // extract the notes paragraph using regular expressions
+    // 질문을 뽑아내는 형식은 여기서 결정됩니다.
     const notesRegex = /^###\s*메모:\s*((?:\n|.)*?)^###\s/m;
     const notesMatch = fileContent.match(notesRegex);
     const notesParagraph = notesMatch ? notesMatch[1] : '';
@@ -343,7 +313,7 @@ export default class MyPlugin extends Plugin {
     console.log('notesParagraph: ', notesParagraph);
 
     return notesParagraph;
-  };
+  }
 
   async createNewNoteFromTemplate(templatePath: string, questionFile: TFile, answerContent: string): Promise<void> {
     const { vault, workspace } = this.app;
@@ -384,6 +354,36 @@ export default class MyPlugin extends Plugin {
       recentLeaf.openFile(newFile);
     else
       throw new Error("답변 파일이 제대로 생성되지 않았거나, workspaceleaf 생성에 실패했습니다.");
+  }
+
+  async printFileMetadataCache(file: TFile) {
+    const cache = this.app.metadataCache.getFileCache(file);
+    console.log('cache: ', cache);
+  }
+
+  async getConversationHistory(inputFile: TFile): Promise<any> {
+    // 연결된 파일이 없다면, 현재 파일의 질문내용을 return 한다.
+    const cache = this.app.metadataCache.getFileCache(inputFile)
+    const links = cache?.links;
+    const tags = cache?.tags as TagCache[];  // tags[1] 값은 #question, #answer 중 하나여야만 합니다.
+
+    const FileContent = await this.app.vault.read(inputFile);
+    const content = await this.parseQuestionFromString(FileContent);
+    console.log('links: ', links);
+    if (links === undefined) {
+      return [
+        { "role": "system", "content": "You are a helpful assistant." },
+        { "role": "user", "content": content }
+      ];
+    }
+    const linkFile: TFile = this.app.vault.getAbstractFileByPath(`${links[0].link}.md`) as TFile;
+    console.log('linkFile: ', linkFile);
+    const ret: any = await this.getConversationHistory(linkFile);
+    console.log('ret: ', ret);
+    return [ ...ret, {
+      "role": tags[1].tag === "#answer" ? "assistant" : "user",
+      "content": content,
+    }];
   }
 
   async onunload() {
