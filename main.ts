@@ -116,19 +116,9 @@ export default class ZettelGPT extends Plugin {
     const answerFileName = `${questionFile.basename}-answer`;
     const answerFile = await vault.create(`${answerFileName}.md`, '');
 
-    // 질문노트에 답변노트링크를 추가하는 작업.
-    //await vault.append(questionFile, ` [[${answerFile.basename}]]`)
-
-
-    // Parse conversation context
-    //this.app.metadataCache.fileToLinktext()
-
-    // =================================
-
     // Open templateFile
     const templatePath = 'Template/Answer.md';
     const templateFile = vault.getAbstractFileByPath(templatePath);
-    //const templateFile = vault.getAbstractFileByPath(templatePath) as TFile;
     if (!(templateFile instanceof TFile)) {
       throw new Error(`[${templatePath}]는 적절한 템플릿 파일이 아닙니다.`);
     }
@@ -154,8 +144,6 @@ export default class ZettelGPT extends Plugin {
     // Create the new file with the generated content
     // Write the generated content to answerFile
     await vault.append(answerFile, templateContent);
-
-    // =================================
 
     // Make Answer by chatGPT
     const answerContent :string = await this.getChatGPTAnswer2(conversationHistory, answerFile);
@@ -308,47 +296,6 @@ export default class ZettelGPT extends Plugin {
     console.log('notesParagraph: ', notesParagraph);
 
     return notesParagraph;
-  }
-
-  async createNewNoteFromTemplate(templatePath: string, questionFile: TFile, answerContent: string): Promise<void> {
-    const { vault, workspace } = this.app;
-    const answerFileName = `${questionFile.basename}-answer.md`;
-
-    // Open templateFile
-    const templateFile = vault.getAbstractFileByPath(templatePath);
-    if (!(templateFile instanceof TFile)) {
-      throw new Error(`[${templatePath}]는 적절한 템플릿 파일이 아닙니다.`);
-    }
-
-    // Read the template content
-    let templateContent = await vault.read(templateFile);
-    console.log('templateContent: ', templateContent);
-
-    // Insert the metadata into the template content
-    const metadata: Metadata = {
-      title: answerFileName,
-      linked_note: `[[${questionFile.basename}]]`,
-      content: answerContent,
-    }
-
-    // replace metadata
-    for (const key in metadata) {
-      const placeholder = `{{${key}}}`;
-      const value = metadata[key];
-      templateContent = templateContent.replace(placeholder, value);
-    }
-
-    // Create the new file with the generated content
-    const fileName = `${answerFileName}.md`;
-    await vault.create(fileName, templateContent);
-
-    // Open & display AnswerFile
-    const newFile = await vault.getAbstractFileByPath(fileName);
-    const recentLeaf = workspace.getMostRecentLeaf();
-    if (newFile instanceof TFile && recentLeaf instanceof WorkspaceLeaf)
-      recentLeaf.openFile(newFile);
-    else
-      throw new Error("답변 파일이 제대로 생성되지 않았거나, workspaceleaf 생성에 실패했습니다.");
   }
 
   async printFileMetadataCache(file: TFile) {
