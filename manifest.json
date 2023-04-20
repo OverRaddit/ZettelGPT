@@ -5,7 +5,7 @@
 	"minAppVersion": "0.15.0",
 	"description": "ZettelGPT: Turbocharge Your Note-taking with AI Assistance",
 	"author": "Overraddit",
-	"authorUrl": "https://github.com/OverRaddit?tab=repositories",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"authorUrl": "https://github.com/OverRaddit",
+	"fundingUrl": "https://www.buymeacoffee.com/Overraddit",
 	"isDesktopOnly": false
 }
