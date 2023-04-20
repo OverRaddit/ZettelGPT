@@ -25,28 +25,26 @@ export default class ZettelGPT extends Plugin {
     this.openai = new OpenAIApi(configuration);
 
     // Ribbon Button 등록
+    this.addRibbonIcon("file-plus", "Insert Question Template", async () => {
+      const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
+      if (!(currentFile instanceof TFile)) {
+        new Notice("Note not found. click the note and retry 🤔");
+        throw new Error("현재 노트가 열려있지 않습니다.");
+      }
+      await app.vault.append(currentFile, Question);
+    });
     this.addRibbonIcon("message-circle", "Generate ChatGPT Answer", async () => {
       await this.generateAnswer();
     });
-    this.addRibbonIcon("help-circle", "Generate ChatGPT Answer", async () => {
-      new Notice('[This button will generate new question file!]');
-    });
-    this.addRibbonIcon("dice", "getLink", async () => {
-      // const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
-      // if (!(currentFile instanceof TFile))
-      //   return;
-      // console.log('link: ', await this.printFileMetadataCache(currentFile));
-
-      console.log('Q: ', Question);
-      console.log('A: ', Answer);
-    });
-    this.addRibbonIcon("fish", "getConversationHistory", async () => {
-      const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
-      if (!(currentFile instanceof TFile))
-        return;
-      //const questionContent = await this.app.vault.read(currentFile);
-      console.log('getContent: ', await this.getConversationHistory(currentFile));
-    });
+    // this.addRibbonIcon("help-circle", "Generate ChatGPT Answer", async () => {
+    //   new Notice('[This button will generate new question file!]');
+    // });
+    // this.addRibbonIcon("fish", "getConversationHistory", async () => {
+    //   const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
+    //   if (!(currentFile instanceof TFile))
+    //     return;
+    //   console.log('getContent: ', await this.getConversationHistory(currentFile));
+    // });
 
     // 우측 하단의 statusBar 관련 코드
     const statusBarItemEl = this.addStatusBarItem();
