@@ -111,11 +111,6 @@ export default class ZettelGPT extends Plugin {
     // Parse Question
     const questionContent = await this.app.vault.read(questionFile);
     const conversationHistory = await this.getConversationHistory(questionFile);
-    // append content by querySlector
-    // ==========================
-    //const renderedNote = this.app.workspace.ren
-    //MarkdownRenderer renderer;
-    // ==========================
 
     // Make answerFile
     const answerFileName = `${questionFile.basename}-answer`;
