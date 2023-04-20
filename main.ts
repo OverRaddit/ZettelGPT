@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, RequestUrlParam, TFile, TagCache, WorkspaceLeaf, request } from 'obsidian';
+import { MarkdownView, Notice, Plugin, RequestUrlParam, TFile, TagCache, WorkspaceLeaf, request } from 'obsidian';
 import { Configuration, OpenAIApi } from 'openai';
 import { DEFAULT_SETTINGS, ZettelGPTSettings, ZettelGPTSettingsTab } from 'src/Setting';
 import MarkdownIt from 'markdown-it';
@@ -36,15 +36,6 @@ export default class ZettelGPT extends Plugin {
     this.addRibbonIcon("message-circle", "Generate ChatGPT Answer", async () => {
       await this.generateAnswer();
     });
-    // this.addRibbonIcon("help-circle", "Generate ChatGPT Answer", async () => {
-    //   new Notice('[This button will generate new question file!]');
-    // });
-    // this.addRibbonIcon("fish", "getConversationHistory", async () => {
-    //   const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
-    //   if (!(currentFile instanceof TFile))
-    //     return;
-    //   console.log('getContent: ', await this.getConversationHistory(currentFile));
-    // });
 
     // 우측 하단의 statusBar 관련 코드
     const statusBarItemEl = this.addStatusBarItem();
@@ -63,42 +54,6 @@ export default class ZettelGPT extends Plugin {
 			callback: this.generateAnswer.bind(this),
 		});
 
-    // This adds a simple command that can be triggered anywhere
-    this.addCommand({
-      id: 'open-sample-modal-simple',
-      name: 'Open sample modal (simple)',
-      callback: () => {
-        new SampleModal(this.app).open();
-      }
-    });
-    // This adds an editor command that can perform some operation on the current editor instance
-    this.addCommand({
-      id: 'sample-editor-command',
-      name: 'Sample editor command',
-      editorCallback: (editor: Editor, view: MarkdownView) => {
-        console.log(editor.getSelection());
-        editor.replaceSelection('Sample Editor Command');
-      }
-    });
-    // This adds a complex command that can check whether the current state of the app allows execution of the command
-    this.addCommand({
-      id: 'open-sample-modal-complex',
-      name: 'Open sample modal (complex)',
-      checkCallback: (checking: boolean) => {
-        // Conditions to check
-        const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (markdownView) {
-          // If checking is true, we're simply "checking" if the command can be run.
-          // If checking is false, then we want to actually perform the operation.
-          if (!checking) {
-            new SampleModal(this.app).open();
-          }
-
-          // This command will only show up in Command Palette when the check function returns true
-          return true;
-        }
-      }
-    });
   }
 
   async generateAnswer() {
@@ -112,25 +67,14 @@ export default class ZettelGPT extends Plugin {
     // Get QuestionFile
     const questionFile = activeView.file;
     // Parse Question
-    const questionContent = await this.app.vault.read(questionFile);
+    await this.app.vault.read(questionFile);
     const conversationHistory = await this.getConversationHistory(questionFile);
 
     // Make answerFile
     const answerFileName = `${questionFile.basename}-answer`;
     const answerFile = await vault.create(`${answerFileName}.md`, '');
 
-    // Open & Read templateFile ===========================
-
-    // const templatePath = 'Template/Answer.md';
-    // const templateFile = vault.getAbstractFileByPath(templatePath);
-    // if (!(templateFile instanceof TFile)) {
-    //   throw new Error(`[${templatePath}]는 적절한 템플릿 파일이 아닙니다.`);
-    // }
-    // let templateContent = await vault.read(templateFile);
-    // console.log('templateContent: ', templateContent);
-
     let templateContent = Answer;
-    // ============================================
 
     // Insert the metadata into the template content
     const metadata: Metadata = {
@@ -151,7 +95,7 @@ export default class ZettelGPT extends Plugin {
     await vault.append(answerFile, templateContent);
 
     // Make Answer by chatGPT
-    const answerContent :string = await this.getChatGPTAnswer2(conversationHistory, answerFile);
+    await this.getChatGPTAnswer2(conversationHistory, answerFile);
 
     // Open & display AnswerFile
     const recentLeaf = workspace.getMostRecentLeaf();
@@ -216,7 +160,6 @@ export default class ZettelGPT extends Plugin {
         //    stop: ['\n'],
       }),
     };
-    console.log('apiKey: ', apiKey);
     const message = {
       "role": "assistant",
       "content": ""
@@ -228,11 +171,10 @@ export default class ZettelGPT extends Plugin {
 
     const d = new TextDecoder('utf8');
     const reader = await r.getReader();
-    const fullText = ''
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { value, done } = await reader.read();
       if (done) {
-        console.log('done');
         break;
       } else {
         const decodedString = d.decode(value);
@@ -241,26 +183,18 @@ export default class ZettelGPT extends Plugin {
 
         for (const line of lines) {
           try {
-            console.log('line: ', line);
             const delta: any = JSON.parse(line.slice(6)).choices[0].delta;
             if (delta.hasOwnProperty("role"))
               message["role"] = delta["role"];
             else if (delta.hasOwnProperty("content")) {
-              console.log('content: ', message["content"]);
               message["content"] += delta["content"];
               // 1안 열려있는 파일의 특정 placeholder를 replace한다.
 
               // 2안 각 content를 append한다.
               this.app.vault.append(answerFile, delta["content"]);
             }
-            console.log(message);
           } catch (e) {
             // the last line is data: [DONE] which is not parseable either, so we catch that.
-            console.log(
-            e, '\n\n\n\n',
-            'But parsed string is below\n\n\n\n',
-            );
-            console.log(fullText);
           }
         }
       }
@@ -270,13 +204,9 @@ export default class ZettelGPT extends Plugin {
 	}
 
   async parseQuestionFromString(questionContent: string): Promise<string> {
-    //const notesRegex = /^##\s*내용:\s*((?:\n|.)*?)^###\s/m;
-    //const notesRegex = /^##\s내용:\n----\s*((?:\n|.)*?)^----\s/m;
     const notesRegex = /## 내용:\n([\s\S]*)/;
     const notesMatch = questionContent.match(notesRegex);
     const notesParagraph = notesMatch ? notesMatch[1] : '';
-
-    console.log('notesParagraph: ', notesParagraph);
 
     return notesParagraph;
   }
@@ -303,11 +233,6 @@ export default class ZettelGPT extends Plugin {
     return notesParagraph;
   }
 
-  async printFileMetadataCache(file: TFile) {
-    const cache = this.app.metadataCache.getFileCache(file);
-    console.log('cache: ', cache);
-  }
-
   async getConversationHistory(inputFile: TFile): Promise<any> {
     // 연결된 파일이 없다면, 현재 파일의 질문내용을 return 한다.
     const cache = this.app.metadataCache.getFileCache(inputFile)
@@ -316,7 +241,6 @@ export default class ZettelGPT extends Plugin {
 
     const FileContent = await this.app.vault.read(inputFile);
     const content = await this.parseQuestionFromString(FileContent);
-    console.log('links: ', links);
     if (links === undefined) {
       return [
         { "role": "system", "content": "You are a helpful assistant." },
@@ -324,9 +248,7 @@ export default class ZettelGPT extends Plugin {
       ];
     }
     const linkFile: TFile = this.app.vault.getAbstractFileByPath(`${links[0].link}.md`) as TFile;
-    console.log('linkFile: ', linkFile);
     const ret: any = await this.getConversationHistory(linkFile);
-    console.log('ret: ', ret);
     return [ ...ret, {
       "role": tags[1].tag === "#answer" ? "assistant" : "user",
       "content": content,
@@ -341,21 +263,5 @@ export default class ZettelGPT extends Plugin {
   }
   async saveSettings() {
     await this.saveData(this.settings);
-  }
-}
-
-class SampleModal extends Modal {
-  constructor(app: App) {
-    super(app);
-  }
-
-  onOpen() {
-    const {contentEl} = this;
-    contentEl.setText('Woah!');
-  }
-
-  onClose() {
-    const {contentEl} = this;
-    contentEl.empty();
   }
 }
