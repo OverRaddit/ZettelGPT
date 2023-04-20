@@ -2,6 +2,7 @@ import { App, Editor, MarkdownView, Modal, Notice, Plugin, RequestUrlParam, TFil
 import { Configuration, OpenAIApi } from 'openai';
 import { DEFAULT_SETTINGS, ZettelGPTSettings, ZettelGPTSettingsTab } from 'src/Setting';
 import MarkdownIt from 'markdown-it';
+import { Answer, Question } from 'src/template';
 
 interface Metadata {
 	[key: string]: string;
@@ -31,10 +32,13 @@ export default class ZettelGPT extends Plugin {
       new Notice('[This button will generate new question file!]');
     });
     this.addRibbonIcon("dice", "getLink", async () => {
-      const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
-      if (!(currentFile instanceof TFile))
-        return;
-      console.log('link: ', await this.printFileMetadataCache(currentFile));
+      // const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
+      // if (!(currentFile instanceof TFile))
+      //   return;
+      // console.log('link: ', await this.printFileMetadataCache(currentFile));
+
+      console.log('Q: ', Question);
+      console.log('A: ', Answer);
     });
     this.addRibbonIcon("fish", "getConversationHistory", async () => {
       const currentFile = this.app.workspace.getActiveViewOfType(MarkdownView)?.file;
@@ -104,6 +108,7 @@ export default class ZettelGPT extends Plugin {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     // Handle case when the active view is not a Markdown file
     if (!activeView) {
+      new Notice("Note not found. click the note and retry 🤔");
       throw new Error("현재 노트가 열려있지 않습니다.");
     }
     // Get QuestionFile
@@ -116,16 +121,18 @@ export default class ZettelGPT extends Plugin {
     const answerFileName = `${questionFile.basename}-answer`;
     const answerFile = await vault.create(`${answerFileName}.md`, '');
 
-    // Open templateFile
-    const templatePath = 'Template/Answer.md';
-    const templateFile = vault.getAbstractFileByPath(templatePath);
-    if (!(templateFile instanceof TFile)) {
-      throw new Error(`[${templatePath}]는 적절한 템플릿 파일이 아닙니다.`);
-    }
+    // Open & Read templateFile ===========================
 
-    // Read the template content
-    let templateContent = await vault.read(templateFile);
-    console.log('templateContent: ', templateContent);
+    // const templatePath = 'Template/Answer.md';
+    // const templateFile = vault.getAbstractFileByPath(templatePath);
+    // if (!(templateFile instanceof TFile)) {
+    //   throw new Error(`[${templatePath}]는 적절한 템플릿 파일이 아닙니다.`);
+    // }
+    // let templateContent = await vault.read(templateFile);
+    // console.log('templateContent: ', templateContent);
+
+    let templateContent = Answer;
+    // ============================================
 
     // Insert the metadata into the template content
     const metadata: Metadata = {
