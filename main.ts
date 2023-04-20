@@ -1,7 +1,6 @@
 import { MarkdownView, Notice, Plugin, RequestUrlParam, TFile, TagCache, WorkspaceLeaf, request } from 'obsidian';
 import { Configuration, OpenAIApi } from 'openai';
 import { DEFAULT_SETTINGS, ZettelGPTSettings, ZettelGPTSettingsTab } from 'src/Setting';
-import MarkdownIt from 'markdown-it';
 import { Answer, Question } from 'src/template';
 
 interface Metadata {
@@ -11,11 +10,9 @@ interface Metadata {
 export default class ZettelGPT extends Plugin {
   settings: ZettelGPTSettings;
   openai: OpenAIApi;
-  md: MarkdownIt;
 
   async onload() {
     await this.loadSettings();
-    this.md = new MarkdownIt();
 
     // setting
     this.addSettingTab(new ZettelGPTSettingsTab(this.app, this));
