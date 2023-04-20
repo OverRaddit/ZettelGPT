@@ -1,96 +1,45 @@
-# Obsidian Sample Plugin
+# Obsidian ZettelGPT Plugin
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+To download Obsidian: [Click here](https://www.obsidian.md)
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+<a href="https://www.buymeacoffee.com/Overraddit" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;"></a>
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+Welcome to the ZettelGPT plugin for Obsidian! 🎉 This awesome plugin helps you generate answers from ChatGPT based on your questions, while keeping the conversation history clear and organized. Save GPT tokens and enjoy a smooth interaction with ChatGPT! 🚀
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+In your ZettelGPT plugin, users can create question notes and answer notes, where the answer notes use the question from the question note and the history of the conversation up to that point. 📝 By providing only the relevant conversation history, you can save GPT tokens and optimize the plugin's efficiency. 💡
 
-## First time developing plugins?
+Your implementation also allows for asking questions in a self-contained environment. 🏡 For example, if a user asks 10 questions to GPT, the context of these questions could be lost when asking an additional question after three more unrelated questions. 😕 However, with your plugin, you only pass the conversation history from the base node to the current leaf node, allowing users to ask independent questions in the same environment without losing the context of previous questions. 🌟
 
-Quick starting guide for new plugin devs:
+By combining these features, your ZettelGPT plugin offers an efficient and context-aware solution for asking questions and generating answers within Obsidian, enabling users to maintain a clear and organized conversation history with ChatGPT. 🤖
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
 
-## Releasing new releases
+## Features 🌟
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+### 1. Contextual Conversations 📚
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+Efficiently interact with ChatGPT by providing only the relevant conversation history, optimizing GPT token usage, and preserving context across independent questions.
 
-## Adding your plugin to the community plugin list
+### 2. Self-Contained Environment 🏡
 
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+Ask questions within a self-contained environment, ensuring the context of previous questions is maintained, even when asking additional questions in the same environment.
 
-## How to use
+### 3. Visual Clarity 🔍
 
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
+Easily understand and navigate your conversation with ChatGPT through Obsidian's graph view, which visually connects question notes and answer notes for a clear and organized overview.
 
-## Manually installing the plugin
+## Setup ⚙️
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+To set up the ZettelGPT plugin, follow these steps:
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+1. Provide instructions for obtaining any necessary API keys or credentials.
+2. Explain how to install the plugin in Obsidian.
+3. Describe the settings and configuration process within Obsidian.
 
-## Funding URL
+## How to use 🎓
 
-You can include funding URLs where people who use your plugin can financially support it.
+1. Create a new note and click the "Insert Question Template" button. ✍️
+2. Scroll to the bottom of the note and type your question in the designated field. ❓
+3. Click the "Generate Answer" button to receive ChatGPT's response. The answer will appear in real-time within a connected answer note. 🤖
+4. To ask additional questions, repeat steps 1-2, and then link the new question note to the desired answer note before proceeding to step 3. 🔄
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
-
-## API Documentation
-
-See https://github.com/obsidianmd/obsidian-api
+Enjoy your conversation with ChatGPT using the ZettelGPT plugin for Obsidian! 🎈
