@@ -42,12 +42,6 @@ export default class ZettelGPT extends Plugin {
     this.addCommand({
       id: 'generate-chatgpt-answer',
       name: 'Generate ChatGPT Answer',
-      hotkeys: [
-        {
-          modifiers: ['Mod', 'Shift'],
-          key: 'G',
-        },
-      ],
 			callback: this.generateAnswer.bind(this),
 		});
 
