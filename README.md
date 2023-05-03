@@ -30,7 +30,7 @@ Generate an OpenAI API key [here](https://beta.openai.com/signup).
 In Obsidian, go to Settings and select ZettelGPT from the "Community Plugins" in the left menu.
 Enter your OpenAI API key.
 
-Please be aware that this plugin uploads note content to OpenAI servers as per Obsidian's new developer policies. Read the full developer policies [here](https://docs.obsidian.md/Developer+policies).
+Please be aware that this plugin uploads note content to OpenAI servers to be compliant with Obsidian's developer policies.
 
 Currently, the plugin uses GPT-3.5 Turbo, but we plan to update it to support other models in the future.
 
