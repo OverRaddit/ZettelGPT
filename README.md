@@ -24,11 +24,15 @@ Easily understand and navigate your conversation with ChatGPT through Obsidian's
 
 ## Setup ⚙️
 
-To set up the ZettelGPT plugin, follow these steps:
+In order to configure the plugin, you must first set your OpenAI API key in the plugin settings. Please note that using the OpenAI API might require payment. Check OpenAI's pricing details [here](https://openai.com/pricing).
 
-1. Provide instructions for obtaining any necessary API keys or credentials.
-2. Explain how to install the plugin in Obsidian.
-3. Describe the settings and configuration process within Obsidian.
+Generate an OpenAI API key [here](https://beta.openai.com/signup).
+In Obsidian, go to Settings and select ZettelGPT from the "Community Plugins" in the left menu.
+Enter your OpenAI API key.
+
+Please be aware that this plugin uploads note content to OpenAI servers as per Obsidian's new developer policies. Read the full developer policies [here](https://docs.obsidian.md/Developer+policies).
+
+Currently, the plugin uses GPT-3.5 Turbo, but we plan to update it to support other models in the future.
 
 ## How to use 🎓
 
