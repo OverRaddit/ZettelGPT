@@ -58,7 +58,7 @@ export default class ZettelGPT extends Plugin {
     // Get QuestionFile
     const questionFile = activeView.file;
     // Parse Question
-    await this.app.vault.read(questionFile);
+    await this.app.vault.cachedRead(questionFile);
     const conversationHistory = await this.getConversationHistory(questionFile);
 
     // Make answerFile
@@ -211,7 +211,7 @@ export default class ZettelGPT extends Plugin {
       throw new Error("질문 파일이 없음");
     }
     const questionFile = activeView.file;
-    const fileContent = await vault.read(questionFile);
+    const fileContent = await vault.cachedRead(questionFile);
 
     // extract the notes paragraph using regular expressions
     // 질문을 뽑아내는 형식은 여기서 결정됩니다.
@@ -230,7 +230,7 @@ export default class ZettelGPT extends Plugin {
     const links = cache?.links;
     const tags = cache?.tags as TagCache[];  // tags[1] 값은 #question, #answer 중 하나여야만 합니다.
 
-    const FileContent = await this.app.vault.read(inputFile);
+    const FileContent = await this.app.vault.cachedRead(inputFile);
     const content = await this.parseQuestionFromString(FileContent);
     if (links === undefined) {
       return [
