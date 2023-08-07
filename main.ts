@@ -89,7 +89,7 @@ export default class ZettelGPT extends Plugin {
     await this.getChatGPTAnswer2(conversationHistory, answerFile);
 
     // Open & display AnswerFile
-    const recentLeaf = workspace.getMostRecentLeaf();
+    const recentLeaf = workspace.getLeaf();
     if (answerFile instanceof TFile && recentLeaf instanceof WorkspaceLeaf)
       recentLeaf.openFile(answerFile);
     else
