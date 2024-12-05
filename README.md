@@ -2,6 +2,8 @@
 
 To download Obsidian: [Click here](https://www.obsidian.md)
 
+📄 Read Presentation for this project(KOR): [Click here](https://drive.google.com/file/d/1Mn_qmZaWtLlf81fhUfjZDaraJ512RwZe/view?usp=sharing)
+
 <a href="https://www.buymeacoffee.com/Overraddit" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 150px !important;"></a>
 
 ![ZettelGPTDemo](https://user-images.githubusercontent.com/30787477/233355651-81973be2-ab49-4333-88a1-f8074ac3ee14.gif)
